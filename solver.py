@@ -49,4 +49,4 @@ gs.print_grid()
 hg.print_grid()
 
 gs.full_move()
-# hg.full_move()
+hg.full_move()

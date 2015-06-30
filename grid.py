@@ -113,18 +113,22 @@ class Grid:
             for orb in eliminated:
                 self.destroy_orb(orb)
             self.fall()
-            self.print_grid()
         print("{} Combos, {} Orbs Matched".format(len(self.combo), 0))
 
 
     def fall(self):
-        for row in reversed(self.grid):
-            for orb in row:
-                if orb.color is None:
-                    up = self.up(orb)
-                    print(up)
-                    orb = up
-                    up = Orb(None, False)
+        falling = True
+        while falling:
+            falling = False
+            for row in reversed(self.grid):
+                for orb in row:
+                    if orb.color is None:
+                        up = self.up(orb)
+                        if up.color:
+                            falling = True
+                        orb.color = up.color
+                        orb.enhanced = up.enhanced
+                        up.color = None
 
 
     def up(self, orb):
