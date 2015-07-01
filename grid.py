@@ -3,6 +3,7 @@ from colorama import Fore, Back, Style
 from colorama import init
 
 init()
+DEBUG = False
 
 class Orb:
     def __init__(self, color, enhanced):
@@ -78,6 +79,12 @@ class Grid:
                 if orb == o:
                     return (x, y)
         return None
+
+    def swap(self, pos1, pos2):
+        a = self.get_orb(*pos1)
+        b = self.get_orb(*pos2)
+        self.add_orb(pos2[0], pos2[1], a)
+        self.add_orb(pos1[0], pos1[1], b)
     
     def destroy_orb(self, orb):
         for y, row in enumerate(self.grid):
@@ -107,14 +114,21 @@ class Grid:
         self.combo = []
         comboing = True
         while comboing:
-            self.print_grid()
+            if DEBUG:
+                self.print_grid()
             eliminated = self.find_matches()
             comboing = eliminated
             for orb in eliminated:
                 self.destroy_orb(orb)
-            self.print_grid()
+            if DEBUG:
+                self.print_grid()
             self.fall()
-        print("{} Combos, {} Orbs Matched".format(len(self.combo), 0))
+
+        combo_num = len(self.combo)
+        orbs_matched = sum([len(x.orbs) for x in self.combo])
+        if DEBUG:
+            print("{} Combos, {} Orbs Matched".format(combo_num, orbs_matched))
+        return (combo_num, orbs_matched)
 
 
     def fall(self):
