@@ -66,8 +66,8 @@ class Grid:
         for row in self.grid:
             for orb in row:
                 orb.print_orb()
+                print(Fore.RESET + Back.RESET, end='')
             print()
-        print(Fore.RESET + Back.RESET)
 
     def get_orb(self, x, y):
         return self.grid[y][x]
@@ -112,6 +112,7 @@ class Grid:
             comboing = eliminated
             for orb in eliminated:
                 self.destroy_orb(orb)
+            self.print_grid()
             self.fall()
         print("{} Combos, {} Orbs Matched".format(len(self.combo), 0))
 
