@@ -5,216 +5,175 @@ from colorama import init
 init()
 DEBUG = False
 
-class Orb:
-    def __init__(self, color, enhanced):
-        self.color = color
-        self.enhanced = enhanced
+def print_wood():
+    print(Back.GREEN + 'G', end='')
 
-    def print_wood(self):
-        print(Back.GREEN + 'G', end='')
+def print_fire():
+    print(Back.RED + 'R', end='')
 
-    def print_fire(self):
-        print(Back.RED + 'R', end='')
+def print_water():
+    print(Back.BLUE + 'B', end='')
 
-    def print_water(self):
-        print(Back.BLUE + 'B', end='')
+def print_dark():
+    print(Back.MAGENTA + 'D', end='')
 
-    def print_dark(self):
-        print(Back.MAGENTA + 'D', end='')
+def print_light():
+    print(Back.YELLOW + 'L', end='')
 
-    def print_light(self):
-        print(Back.YELLOW + 'L', end='')
+def print_heart():
+    print(Back.WHITE + 'H', end='')
+    
+def print_blank():
+    print(Back.BLACK + ' ', end='')
 
-    def print_heart(self):
-        print(Back.WHITE + 'H', end='')
-        
-    def print_blank(self):
-        print(Back.BLACK + ' ', end='')
 
+def print_orb(color):
     print_dict = {
-        'wood': print_wood,
-        'fire': print_fire,
-        'water': print_water,
-        'dark': print_dark,
-        'light': print_light,
-        'heart': print_heart,
+        'g': print_wood,
+        'r': print_fire,
+        'b': print_water,
+        'd': print_dark,
+        'l': print_light,
+        'h': print_heart,
         None: print_blank,
             }
-
-    def print_orb(self):
-        self.print_dict[self.color](self)
-
-    def __repr__(self):
-        return str(self.color)
-
-    def match(self, orb):
-        if orb is None:
-            return False
-        if orb.color is None or self.color is None:
-            return False
-        return self.color == orb.color
-
-
-class Grid:
-    def __init__(self):
-        self.grid = [[None] * 6 for i in range(5)]
-
-    def add_orb(self, x, y, orb):
-        self.grid[y][x] = orb
-
-    def print_grid(self):
-        print(Fore.BLACK)
-        for row in self.grid:
-            for orb in row:
-                orb.print_orb()
-                print(Fore.RESET + Back.RESET, end='')
-            print()
-
-    def get_orb(self, x, y):
-        return self.grid[y][x]
-
-    def get_pos(self, orb):
-        for y, row in enumerate(self.grid):
-            for x, o in enumerate(row):
-                if orb == o:
-                    return (x, y)
-        return None
-
-    def swap(self, pos1, pos2):
-        a = self.get_orb(*pos1)
-        b = self.get_orb(*pos2)
-        self.add_orb(pos2[0], pos2[1], a)
-        self.add_orb(pos1[0], pos1[1], b)
+    print_dict[color]()
     
-    def destroy_orb(self, orb):
-        for y, row in enumerate(self.grid):
-            for x, o in enumerate(row):
-                if orb == o:
-                   self.grid[y][x] = Orb(None, False) 
+def graph(grid):
+    d = {'wood':'g',
+        'fire':'r',
+        'water':'b',
+        'dark':'d',
+        'light':'l',
+        'heart':'h',
+        None: None
+        }
+    graph = []
+    for g in grid:
+        graph.append(d[g])
+    if(DEBUG):
+        print(graph)
+    return graph
 
-    def find_matches(self):
-        matched_orbs = set()
-        for row in self.grid:
-            for orb in row:
-                if orb.match(self.up(orb)) and orb.match(self.down(orb)):
-                    if orb not in matched_orbs and self.up(orb) not in matched_orbs and self.down(orb) not in matched_orbs:
-                        m = Match(orb)
-                        m.expand(self)
-                        self.combo.append(m)
-                        matched_orbs = matched_orbs.union(m.orbs)
-                elif orb.match(self.left(orb)) and orb.match(self.right(orb)):
-                    if orb not in matched_orbs and self.left(orb) not in matched_orbs and self.right(orb) not in matched_orbs:
-                        m = Match(orb)
-                        m.expand(self)
-                        self.combo.append(m)
-                        matched_orbs = matched_orbs.union(m.orbs)
-        return matched_orbs
+def print_grid(grid):
+    print(Fore.BLACK)
+    for i, orb  in enumerate(grid):
+        if i % 6 == 0:
+            print()
+        print_orb(orb)
+    print(Fore.RESET + Back.RESET, end='')
+    print()
 
-    def full_move(self):
-        self.combo = []
-        comboing = True
-        while comboing:
-            if DEBUG:
-                self.print_grid()
-            eliminated = self.find_matches()
-            comboing = eliminated
-            for orb in eliminated:
-                self.destroy_orb(orb)
-            if DEBUG:
-                self.print_grid()
-            self.fall()
+def get_orb(grid, x, y):
+    return grid[pos_to_index(x, y)]
 
-        combo_num = len(self.combo)
-        orbs_matched = sum([len(x.orbs) for x in self.combo])
+def pos_to_index((x, y)):
+    return (y*6) + x
+
+def swap(grid, pos1, pos2):
+    apos = pos_to_index(pos1) 
+    bpos = pos_to_index(pos2)
+    grid[apos], grid[bpos] = grid[bpos], grid[apos]
+    return grid
+
+def find_matches(grid):
+    matched_pos = set()
+    combo = []
+    for i, orb in enumerate(grid):
+        if up(i) and orb == grid[up(i)] and down(i) and orb == grid[down(i)] and orb:
+            if i not in matched_pos and up(i) not in matched_pos and down(i) not in matched_pos:
+                combo.append(match(grid, i))
+                matched_pos = matched_pos.union(combo[-1])
+        elif left(i) and orb == grid[left(i)] and right(i) and orb == grid[right(i)] and orb:
+            if i not in matched_pos and left(i) not in matched_pos and right(i) not in matched_pos:
+                combo.append(match(grid, i))
+                matched_pos = matched_pos.union(combo[-1])
+    return combo, matched_pos
+
+def full_move(grid):
+    combo = []
+    comboing = True
+    while comboing:
         if DEBUG:
-            print("{} Combos, {} Orbs Matched".format(combo_num, orbs_matched))
-        return (combo_num, orbs_matched)
+            print_grid(grid)
+        new_combo, matched_pos = find_matches(grid)
+        combo += new_combo
+        comboing = matched_pos
+        for i in matched_pos:
+            grid[i] = None
+        if DEBUG:
+            print_grid(grid)
+        grid = fall(grid)
+
+    combo_num = len(combo)
+    orbs_matched = sum([len(x) for x in combo])
+    if DEBUG:
+        print("{} Combos, {} Orbs Matched".format(combo_num, orbs_matched))
+    return (combo_num, orbs_matched)
 
 
-    def fall(self):
-        falling = True
-        while falling:
-            falling = False
-            for row in reversed(self.grid):
-                for orb in row:
-                    if orb.color is None:
-                        up = self.up(orb)
-                        if up.color:
-                            falling = True
-                        orb.color = up.color
-                        orb.enhanced = up.enhanced
-                        up.color = None
+def fall(grid):
+    falling = True
+    while falling:
+        falling = False
+        for i, orb in enumerate(grid):
+            if orb is None:
+                d = up(i)
+                if d and grid[d] is not None:
+                    falling = True
+                    grid[i] = grid[d]
+                    grid[d] = None
+    return grid
 
 
-    def up(self, orb):
-        for y, row in enumerate(self.grid):
-            for x, o in enumerate(row):
-                if orb == o:
-                    if y > 0:
-                        return self.grid[y-1][x]
-        return Orb(None, False)
+def up(pos):
+    if pos - 6 < 0:
+        return None
+    return pos - 6
 
-    def down(self, orb):
-        for y, row in enumerate(self.grid):
-            for x, o in enumerate(row):
-                if orb == o:
-                    if y < 4:
-                        return self.grid[y+1][x]
-        return Orb(None, False)
+def down(pos):
+    if pos + 6 >= 30:
+        return None
+    return pos + 6
 
-    def left(self, orb):
-        for y, row in enumerate(self.grid):
-            for x, o in enumerate(row):
-                if orb == o:
-                    if x > 0:
-                        return self.grid[y][x-1]
-        return Orb(None, False)
+def left(pos):
+    if pos % 6 == 0:
+        return None
+    return pos - 1
 
-    def right(self, orb):
-        for y, row in enumerate(self.grid):
-            for x, o in enumerate(row):
-                if orb == o:
-                    if x < 5:
-                        return self.grid[y][x+1]
-        return Orb(None, False)
+def right(pos):
+    if pos % 6 == 5:
+        return None
+    return pos + 1
 
-    def __repr__(self):
-        return str(self.grid)
+def match(grid, start):
+    solid_match = set()
+    checked = set()
+    plausible = set()
+    plausible.add(start)
 
+    while plausible:
+        pos = plausible.pop()
+        checked.add(pos)
+        # add plausible neighbors
+        if up(pos) and grid[pos] == grid[up(pos)] and up(pos) not in checked:
+            plausible.add(up(pos))
+        if down(pos) and grid[pos] == grid[down(pos)] and down(pos) not in checked:
+            plausible.add(down(pos))
+        if left(pos) and grid[pos] == grid[left(pos)] and left(pos) not in checked:
+            plausible.add(left(pos))
+        if right(pos) and grid[pos] == grid[right(pos)] and right(pos) not in checked:
+            plausible.add(right(pos))
 
-class Match:
-    def __init__(self, start):
-        self.start = start
-        self.orbs = [start]
+        # check for actual matches
+        if up(pos) and down(pos) and grid[pos] == grid[up(pos)] and grid[pos] == grid[down(pos)]:
+            solid_match.add(pos)
+            solid_match.add(up(pos))
+            solid_match.add(down(pos))
 
-    def expand(self, grid):
-        solid_match = set()
-        checked = set()
-        plausible = set()
-        plausible.add(self.start)
+        if left(pos) and right(pos) and grid[pos] == grid[left(pos)] and grid[pos] == grid[right(pos)]:
+            solid_match.add(pos)
+            solid_match.add(left(pos))
+            solid_match.add(right(pos))
 
-        while plausible:
-            orb = plausible.pop()
-            checked.add(orb)
-            # add plausible neighbors
-            if orb.match(grid.up(orb)) and grid.up(orb) not in checked:
-                plausible.add(grid.up(orb))
-            if orb.match(grid.down(orb)) and grid.up(orb) not in checked:
-                plausible.add(grid.down(orb))
-            if orb.match(grid.left(orb)) and grid.left(orb) not in checked:
-                plausible.add(grid.left(orb))
-            if orb.match(grid.right(orb)) and grid.right(orb) not in checked:
-                plausible.add(grid.right(orb))
-
-            # check for actual matches
-            if orb.match(grid.up(orb)) and orb.match(grid.down(orb)):
-                solid_match.add(orb)
-                solid_match.add(grid.up(orb))
-                solid_match.add(grid.down(orb))
-
-            if orb.match(grid.left(orb)) and orb.match(grid.right(orb)):
-                solid_match.add(orb)
-                solid_match.add(grid.left(orb))
-                solid_match.add(grid.right(orb))
-
-        self.orbs = solid_match
+    return solid_match

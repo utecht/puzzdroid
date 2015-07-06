@@ -11,7 +11,7 @@ colors = {
         'water':(109, 136, 163),
         'fire':(176, 99, 89),
         'light':(164, 153, 95),
-        'dark+':(177, 132, 171)
+        #'dark':(177, 132, 171), # dark+
         }
 
 def top_left_grid((width, height)):
@@ -124,6 +124,13 @@ def parse_image(file_name):
         print()
     return ret
 
+def get_grid(file_name):
+    im = Image.open(file_name)
+    return top_left_grid(im.size)
+
+def get_box(file_name):
+    im = Image.open(file_name)
+    return box_size(im.size)
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
